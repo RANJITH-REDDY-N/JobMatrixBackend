@@ -49,8 +49,9 @@ env/
 *.log
 local_settings.py
 db.sqlite3
+# Ignore all contents of media but keep the directory
 media/*
-!media/
+!media/.gitkeep
 staticfiles/
 
 # Environment files
