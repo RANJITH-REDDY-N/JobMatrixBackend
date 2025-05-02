@@ -46,6 +46,18 @@ MIDDLEWARE = [
 # ROOT_URLCONF = "JobMatrix.urls"
 ROOT_URLCONF = "config.urls"
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": config("DB_NAME"),
+#         "USER": config("DB_USER"),
+#         "PASSWORD": config("DB_PASSWORD"),
+#         "HOST": config("DB_HOST"),
+#         "PORT": config("DB_PORT", default="3306"),
+#         "OPTIONS": {"sql_mode": "STRICT_TRANS_TABLES"},
+#     }
+# }
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -54,7 +66,10 @@ DATABASES = {
         "PASSWORD": config("DB_PASSWORD"),
         "HOST": config("DB_HOST"),
         "PORT": config("DB_PORT", default="3306"),
-        "OPTIONS": {"sql_mode": "STRICT_TRANS_TABLES"},
+        "OPTIONS": {
+            "sql_mode": "STRICT_TRANS_TABLES",
+            "connector": "mysql-connector-python",  # Add this line
+        },
     }
 }
 

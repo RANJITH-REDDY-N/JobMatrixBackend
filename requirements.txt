@@ -1,5 +1,5 @@
 django
-mysqlclient
+mysql-connector-python
 asgiref==3.8.1
 Django==5.1.7
 django-cors-headers==4.3.1
