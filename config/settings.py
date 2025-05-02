@@ -14,7 +14,7 @@ SECRET_KEY = config("SECRET_KEY")
 # ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 DEBUG = False  # Disable debug mode in production
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ["*"]
 
 # Add CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = ['https://*.railway.app']
