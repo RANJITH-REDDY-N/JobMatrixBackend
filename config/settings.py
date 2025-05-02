@@ -39,9 +39,19 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+    'django.middleware.security.SecurityMiddleware',  # Should be first
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+
 ]
+# SSL/HTTPS settings
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # ROOT_URLCONF = "JobMatrix.urls"
 ROOT_URLCONF = "config.urls"
@@ -68,7 +78,7 @@ DATABASES = {
         "PORT": config("DB_PORT", default="3306"),
         "OPTIONS": {
             "sql_mode": "STRICT_TRANS_TABLES",
-            "connector": "mysql-connector-python",  # Add this line
+            "connector": "mysql-connector-python",
         },
     }
 }
