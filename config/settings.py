@@ -10,8 +10,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", default=True, cast=bool)
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# DEBUG = config("DEBUG", default=True, cast=bool)
+# ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
+DEBUG = False  # Disable debug mode in production
+ALLOWED_HOSTS = ["*"]  # Replace with your domain later
+
+# Add CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = ['https://*.railway.app']
+
+# Update CORS_ALLOWED_ORIGINS with your frontend URLs
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://your-frontend-domain.com"
+]
 
 INSTALLED_APPS = [
     # "django.contrib.auth",
@@ -57,7 +70,9 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+# STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
