@@ -14,7 +14,7 @@ SECRET_KEY = config("SECRET_KEY")
 # ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 DEBUG = False  # Disable debug mode in production
-ALLOWED_HOSTS = ["*"]  # Replace with your domain later
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 # Add CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = ['https://*.railway.app']
@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     # "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
+    "whitenoise.runserver_nostatic",
     "corsheaders",
     "rest_framework",
     "JobMatrix",
@@ -40,11 +41,17 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    'django.middleware.security.SecurityMiddleware',  # Should be first
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
 
 ]
+
+# Static files settings
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
 # SSL/HTTPS settings
 SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
