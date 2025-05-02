@@ -18,11 +18,11 @@ ALLOWED_HOSTS = ["*"]
 
 
 # Update CORS_ALLOWED_ORIGINS with your frontend URLs
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-#     "https://jobmatrixapp.netlify.app"
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://jobmatrixapp.netlify.app"
+]
 # Add CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     'https://*.railway.app',
@@ -111,10 +111,6 @@ LOGGING = {
 WSGI_APPLICATION = 'config.wsgi.application'
 
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
-]
 
 CORS_ALLOW_CREDENTIALS = True
 LANGUAGE_CODE = "en-us"
