@@ -89,7 +89,6 @@ DATABASES = {
         "PORT": config("DB_PORT", default="3306"),
         "OPTIONS": {
             "sql_mode": "STRICT_TRANS_TABLES",
-            "connector": "mysql-connector-python",
         },
     }
 }
