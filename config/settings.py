@@ -16,16 +16,19 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = False  # Disable debug mode in production
 ALLOWED_HOSTS = ["*"]
 
-# Add CSRF trusted origins
-CSRF_TRUSTED_ORIGINS = ['https://*.railway.app']
-
 
 # Update CORS_ALLOWED_ORIGINS with your frontend URLs
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+#     "https://jobmatrixapp.netlify.app"
+# ]
+# Add CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.railway.app',
     'https://jobmatrixapp.netlify.app'
 ]
+
 
 INSTALLED_APPS = [
     # "django.contrib.auth",
