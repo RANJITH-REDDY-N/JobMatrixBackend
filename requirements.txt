@@ -15,4 +15,3 @@ django-filter~=25.1
 sendgrid~=6.11.0
 urllib3~=2.4.0
 gunicorn
-mysqlclient
