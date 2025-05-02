@@ -19,11 +19,12 @@ ALLOWED_HOSTS = ["*"]
 # Add CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = ['https://*.railway.app']
 
+
 # Update CORS_ALLOWED_ORIGINS with your frontend URLs
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://your-frontend-domain.com"
+    'https://jobmatrixapp.netlify.app'
 ]
 
 INSTALLED_APPS = [
