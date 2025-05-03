@@ -4,8 +4,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("jobmatrix/", include("JobMatrix.urls")),
-    path('jobmatrix/profile/', include('Profile.urls')),
-    path('jobmatrix/job/',include('Job.urls'))
+    path("jobmatrix/profile/", include("Profile.urls")),
+    path("jobmatrix/job/", include("Job.urls"))
 ]
 
 if settings.DEBUG:

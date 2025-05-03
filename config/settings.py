@@ -10,12 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = config("SECRET_KEY")
-# DEBUG = config("DEBUG", default=True, cast=bool)
-# ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-
-DEBUG = False  # Disable debug mode in production
-ALLOWED_HOSTS = ["*"]
-
+DEBUG = config("DEBUG", default=True, cast=bool)
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # Update CORS_ALLOWED_ORIGINS with your frontend URLs
 CORS_ALLOWED_ORIGINS = [
@@ -31,12 +27,11 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 INSTALLED_APPS = [
-    # "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
-    "whitenoise.runserver_nostatic",
     "corsheaders",
     "rest_framework",
+    'storages',
     "JobMatrix",
     "Profile",
     "Job"
@@ -44,12 +39,11 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
-    'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-
 ]
 
 # Static files settings
@@ -87,9 +81,7 @@ DATABASES = {
         "PASSWORD": config("DB_PASSWORD"),
         "HOST": config("DB_HOST"),
         "PORT": config("DB_PORT", default="3306"),
-        "OPTIONS": {
-            "sql_mode": "STRICT_TRANS_TABLES",
-        },
+        "OPTIONS": {"sql_mode": "STRICT_TRANS_TABLES"},
     }
 }
 
@@ -101,9 +93,27 @@ LOGGING = {
             'class': 'logging.StreamHandler',
         },
     },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'boto3': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+        },
+        'botocore': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+        },
+        's3transfer': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+        },
+    },
     'root': {
         'handlers': ['console'],
-        'level': 'DEBUG',
+        'level': 'INFO',
     },
 }
 
@@ -193,3 +203,62 @@ EMAIL_TIMEOUT = 30
 EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = config('SENDGRID_API_KEY')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'nalla4r@cmich.edu')
+
+# AWS S3 Settings
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default=None)
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-2')  # Default to us-east-2
+
+# Verify if S3 credentials are valid
+USE_S3_STORAGE = False  # Start with False, will set to True if validation passes
+S3_CREDENTIALS_PRESENT = all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME])
+
+if S3_CREDENTIALS_PRESENT:
+    try:
+        import boto3
+        from botocore.exceptions import ClientError, NoCredentialsError
+        
+        # Try to validate S3 credentials by making a simple API call
+        try:
+            s3 = boto3.client(
+                's3',
+                aws_access_key_id=AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                region_name=AWS_S3_REGION_NAME
+            )
+            
+            # Try to list the buckets - this will fail if credentials are invalid
+            s3.list_buckets()
+            
+            # If we got here, credentials are valid
+            USE_S3_STORAGE = True
+            
+        except (ClientError, NoCredentialsError):
+            # Silently fall back to local storage
+            pass
+    except ImportError:
+        pass
+else:
+    # Silently use local file storage
+    USE_S3_STORAGE = False
+
+if USE_S3_STORAGE:
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+    AWS_QUERYSTRING_AUTH = True  
+    AWS_QUERYSTRING_EXPIRE = 604800
+    AWS_LOCATION = ''
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_ADDRESSING_STYLE = 'virtual'
+
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+else:
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# Default placeholder for missing images
+DEFAULT_IMAGE_URL = "https://via.placeholder.com/150"

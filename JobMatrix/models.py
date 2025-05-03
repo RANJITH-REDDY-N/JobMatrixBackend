@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MinLengthValidator
 from django.utils import timezone
+from JobMatrix.storage_backends import MediaStorage
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 # ================================================
@@ -14,6 +17,10 @@ class User(models.Model):
         ("RECRUITER", "RECRUITER"),
     ]
 
+    def user_profile_photo_upload_to(instance, filename):
+        user_id = instance.user_id if hasattr(instance, 'user_id') and instance.user_id else 'new'
+        return f"profile_photos/{user_id}/{filename}"
+
     user_first_name = models.CharField(max_length=255, db_column='user_first_name')
     user_last_name = models.CharField(max_length=255, db_column='user_last_name')
     user_email = models.EmailField(unique=True, db_column='user_email')
@@ -24,7 +31,7 @@ class User(models.Model):
     user_state = models.CharField(max_length=100, blank=True, null=True, db_column='user_state')
     user_zip_code = models.CharField(max_length=10, blank=True, null=True, db_column='user_zip_code')
     user_role = models.CharField(max_length=20, choices=ROLE_CHOICES, db_column='user_role')
-    user_profile_photo = models.FileField(upload_to="profile_photos/", blank=True, null=True, db_column='user_profile_photo', max_length=255)
+    user_profile_photo = models.FileField(storage=MediaStorage(), upload_to=user_profile_photo_upload_to, blank=True, null=True, db_column='user_profile_photo', max_length=255)
     user_created_date = models.DateTimeField(auto_now_add=True, db_column='user_created_date')
 
     REQUIRED_FIELDS = ["user_first_name", "user_last_name", "user_email", "user_role", "user_password"]
@@ -60,8 +67,12 @@ class Admin(models.Model):
 # APPLICANT MODEL
 # ================================================
 class Applicant(models.Model):
+
+    def resume_upload_to(instance, filename):
+        return f"resumes/{instance.applicant_id.user_id}/{filename}"
+
     applicant_id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, db_column="applicant_id")
-    applicant_resume = models.FileField(upload_to="resumes/", blank=True, null=True, db_column="applicant_resume", max_length=255)
+    applicant_resume = models.FileField(storage=MediaStorage(), upload_to=resume_upload_to, blank=True, null=True, db_column="applicant_resume", max_length=255)
 
     class Meta:
         db_table = "APPLICANT"
@@ -85,11 +96,16 @@ class Recruiter(models.Model):
 # COMPANY MODEL
 # ================================================
 class Company(models.Model):
+
+    def company_image_upload_to(instance, filename):
+        company_id = instance.company_id if hasattr(instance, 'company_id') and instance.company_id else 'new'
+        return f"company_images/{company_id}/{filename}"
+
     company_id = models.AutoField(primary_key=True, db_column='company_id')
     company_name = models.CharField(max_length=255, unique=True, db_column='company_name')
     company_industry = models.CharField(max_length=100, blank=False, null=False, db_column='company_industry')
     company_description = models.TextField(db_column='company_description')
-    company_image = models.FileField(upload_to="company_images/", blank=True, null=True, db_column="company_image", max_length=255)
+    company_image = models.FileField(storage=MediaStorage(), upload_to=company_image_upload_to, blank=True, null=True, db_column="company_image", max_length=255)
     company_secret_key = models.CharField(max_length=128, blank=False, null=False, db_column='company_secret_key')
 
     class Meta:
@@ -113,7 +129,6 @@ class Job(models.Model):
         constraints = [
             models.CheckConstraint(check=models.Q(job_salary__gte=0), name="check_job_salary")
         ]
-
 
 
 # ================================================
@@ -200,7 +215,6 @@ class Education(models.Model):
 # ================================================
 # SKILL MODEL
 # ================================================
-
 class Skill(models.Model):
     skill_id = models.AutoField(primary_key=True, db_column='skill_id')
     applicant_id = models.ForeignKey(Applicant, on_delete=models.CASCADE, related_name="skills", db_column='applicant_id')
@@ -212,7 +226,6 @@ class Skill(models.Model):
         constraints = [
             models.CheckConstraint(check=models.Q(skill_years_of_experience__gte=0), name="check_skill_experience")
         ]
-
 
 
 # ================================================
@@ -230,3 +243,18 @@ class PasswordResetToken(models.Model):
     @property
     def is_expired(self):
         return timezone.now() > self.expires_at
+
+# Add at the bottom of the file after all models
+@receiver(post_save, sender=Company)
+def update_company_image_path(sender, instance, created, **kwargs):
+    if created and instance.company_image and 'new' in instance.company_image.name:
+        old_name = instance.company_image.name
+        new_name = f"company_images/{instance.company_id}/{old_name.split('/')[-1]}"
+        Company.objects.filter(pk=instance.pk).update(company_image=new_name)
+
+@receiver(post_save, sender=User)
+def update_user_photo_path(sender, instance, created, **kwargs):
+    if created and instance.user_profile_photo and 'new' in instance.user_profile_photo.name:
+        old_name = instance.user_profile_photo.name
+        new_name = f"profile_photos/{instance.user_id}/{old_name.split('/')[-1]}"
+        User.objects.filter(pk=instance.pk).update(user_profile_photo=new_name)

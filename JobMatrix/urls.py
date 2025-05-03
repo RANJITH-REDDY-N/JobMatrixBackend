@@ -2,10 +2,7 @@ from django.urls import path
 
 from JobMatrix.views.password_reset_view import PasswordResetRequestView, VerifyResetCodeView, ResetPasswordView, ChangePasswordView
 from JobMatrix.views.views import *
-from JobMatrix.serializers import (
-    RecruiterSerializer,
-    CompanySerializerForResponse
-)
+from JobMatrix.views import check_broken_files
 
 from JobMatrix.views.admin_dashboard import AdminDashboardCountsView
 from JobMatrix.views.admin_actions import (
@@ -51,3 +48,6 @@ urlpatterns = [
     path('verify-reset-code/', VerifyResetCodeView.as_view(), name='verify_reset_code'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset_password'),  # New endpoint
 ]
+
+# Add this at the bottom after your other URL patterns
+urlpatterns.append(path('admin/check-broken-files/', check_broken_files, name='check_broken_files'))

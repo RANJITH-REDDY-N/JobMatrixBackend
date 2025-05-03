@@ -30,13 +30,12 @@ class JWTAuthentication(BaseAuthentication):
     def generate_jwt(user):
         """
         Generates a JWT token for the user.
-        - `exp`: Token expiration (1 day)
-        - `iat`: Issued at timestamp
         """
         now_utc = datetime.now(timezone.utc)
+        expiration_days = int(settings.JWT_EXPIRATION_DAYS)
         payload = {
             "user_id": user.user_id,
-            "exp": now_utc + timedelta(days=1),
+            "exp": now_utc + timedelta(days=expiration_days),
             "iat": now_utc,
         }
         token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)

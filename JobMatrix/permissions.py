@@ -15,8 +15,6 @@ class IsRecruiter(BasePermission):
         return request.user and request.user.user_role == 'RECRUITER'
 
 class IsApplicant(BasePermission):
-    # def has_permission(self, request, view):
-    #     return request.user and request.user.user_role == 'APPLICANT'
     def has_permission(self, request, view):
         return bool(
             request.user and
