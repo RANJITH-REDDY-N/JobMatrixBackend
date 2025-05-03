@@ -17,6 +17,7 @@ from JobMatrix.permissions import *
 from JobMatrix.models import *
 from Profile.serializers import *
 from Job.serializers import *
+import os
 
 class CustomPagination(PageNumberPagination):
     page_size = 9
@@ -203,10 +204,30 @@ class UserPartialUpdateView(generics.UpdateAPIView):
     serializer_class = UserSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsSelfOrAdmin]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def patch(self, request, *args, **kwargs):
         kwargs['partial'] = True
-        return self.update(request, *args, **kwargs)
+        
+        # Get the user and update
+        response = self.update(request, *args, **kwargs)
+        
+        # If successful, get full profile photo URL using get_full_url
+        if response.status_code == 200 and 'user_profile_photo' in request.data:
+            user_id = kwargs.get('pk')
+            try:
+                user = User.objects.get(pk=user_id)
+                if user.user_profile_photo:
+                    from JobMatrix.utils import get_full_url
+                    if hasattr(user.user_profile_photo, 'name'):
+                        response.data['user_profile_photo'] = get_full_url(user.user_profile_photo.name)
+                    else:
+                        response.data['user_profile_photo'] = get_full_url(str(user.user_profile_photo))
+            except Exception as e:
+                # Don't modify response on error
+                pass
+        
+        return response
 
 class UserRetrieveView(generics.RetrieveAPIView):
     permission_classes = [IsSelf | IsAdmin | IsRecruiter]
@@ -306,17 +327,18 @@ class ApplicantResumeUpdateView(generics.UpdateAPIView):
     serializer_class = ApplicantSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsSelfOrAdmin]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_object(self):
         user = self.request.user
         applicant = get_object_or_404(Applicant, applicant_id = user.user_id)
         return applicant
 
-    def patch(self, request, *args):
+    def patch(self, request, *args, **kwargs):
         user = request.user
         try:
             applicant = Applicant.objects.get(applicant_id = user.user_id)
-        except Applicant.DoesNotExists:
+        except Applicant.DoesNotExist:
             return Response({"error": "You must be an applicant to update a resume"}, status=status.HTTP_403_FORBIDDEN)
 
         resume_data = {}
@@ -333,7 +355,20 @@ class ApplicantResumeUpdateView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception = True)
         self.perform_update(serializer)
 
-        return Response(serializer.data)
+        # Get the full resume URL for the response
+        resume_url = None
+        if applicant.applicant_resume:
+            try:
+                from JobMatrix.utils import get_full_url
+                if hasattr(applicant.applicant_resume, 'name'):
+                    resume_url = get_full_url(applicant.applicant_resume.name)
+                else:
+                    resume_url = get_full_url(str(applicant.applicant_resume))
+            except Exception as e:
+                resume_url = None
+
+        response_data = {"applicant_id": applicant.applicant_id_id, "applicant_resume": resume_url}
+        return Response(response_data)
 
 class RecruiterApplicantListView(generics.ListAPIView):
     """
@@ -617,6 +652,19 @@ class CompanyUpdateView(generics.UpdateAPIView):
         """
         Handle company update requests (PUT or PATCH)
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Log incoming request details for debugging
+        logger.info(f"Company update request received. Method: {request.method}")
+        logger.info(f"Content type: {request.content_type}")
+        
+        if 'company_image' in request.data:
+            if hasattr(request.data['company_image'], 'size'):
+                logger.info(f"Image size: {request.data['company_image'].size} bytes")
+            else:
+                logger.info(f"Image is not a file: {type(request.data['company_image'])}")
+        
         instance = self.get_object()
         if not instance:
             return Response(
@@ -632,24 +680,48 @@ class CompanyUpdateView(generics.UpdateAPIView):
                                 'new_company_secret_key' in request.data)
 
         # Use partial=True for PATCH requests
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop('partial', False) or request.method == 'PATCH'
 
-        # Get appropriate serializer
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        # Handle file deletion - convert empty string to None for image field
+        if 'company_image' in request.data and request.data['company_image'] == '':
+            from django.core.files.uploadedfile import InMemoryUploadedFile
+            # If company_image is empty string (not a file), set it to None
+            if not isinstance(request.data['company_image'], InMemoryUploadedFile):
+                mutable_data = request.data.copy()
+                mutable_data['company_image'] = None
+                request._full_data = mutable_data
+
+        # Create a cleaned copy of the data to avoid directly modifying request.data
+        data_copy = request.data.copy()
+        
+        # Always handle image files specially
+        if 'company_image' in request.FILES:
+            # Use a safe function to process the uploaded file
+            try:
+                from django.core.files.base import ContentFile
+                file_obj = request.FILES['company_image']
+                file_content = file_obj.read()  # Read file content
+                
+                # Create a clean file without problematic path info
+                clean_name = os.path.basename(file_obj.name)
+                
+                # Remove the original file from data
+                data_copy.pop('company_image', None)
+                
+                # Add a clean version
+                data_copy['company_image'] = ContentFile(file_content, name=clean_name)
+                
+                logger.info(f"Successfully processed company image file: {clean_name}")
+            except Exception as e:
+                logger.error(f"Error processing company image file: {str(e)}")
+                # Continue without the image if there's an error
+                data_copy.pop('company_image', None)
+
+        # Get appropriate serializer with our cleaned data
+        serializer = self.get_serializer(instance, data=data_copy, partial=partial)
 
         if serializer.is_valid():
             try:
-                # Special handling for normal updates (not secret key)
-                if not is_secret_key_update and 'company_image' in request.FILES:
-                    # If a new image is uploaded, delete the old one first (optional)
-                    if instance.company_image:
-                        # Store the old image path
-                        old_image = instance.company_image.path
-                        # Only attempt to delete if the file exists
-                        import os
-                        if os.path.isfile(old_image):
-                            os.remove(old_image)
-
                 # Save the updated company details
                 self.perform_update(serializer)
 
@@ -664,9 +736,14 @@ class CompanyUpdateView(generics.UpdateAPIView):
                 image_url = None
                 if instance.company_image:
                     try:
-                        image_url = request.build_absolute_uri(instance.company_image.url)
-                    except:
-                        # Fallback if there's an issue with the URL
+                        from JobMatrix.utils import get_full_url
+                        if hasattr(instance.company_image, 'name'):
+                            image_url = get_full_url(instance.company_image.name)
+                        else:
+                            image_url = get_full_url(str(instance.company_image))
+                    except Exception as e:
+                        # Log specific error but use fallback
+                        logger.error(f"Error generating company image URL: {str(e)}")
                         image_url = instance.company_image.name if instance.company_image else None
 
                 # Prepare company data for response
@@ -686,24 +763,30 @@ class CompanyUpdateView(generics.UpdateAPIView):
 
             except Exception as e:
                 # Handle unexpected errors during update
+                import traceback
+                error_details = traceback.format_exc()
+                logger.error(f"Error updating company: {error_details}")
                 return Response({
                     "message": "Failed to update company details",
                     "error": f"500 Internal Server Error: {str(e)}"
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            # Log validation errors
+            logger.error(f"Validation errors: {serializer.errors}")
+        
+            # Return validation errors with the new format
+            error_message = "Validation error"
+            # Get the first error message if available
+            if serializer.errors:
+                for field, errors in serializer.errors.items():
+                    if errors and isinstance(errors, list) and len(errors) > 0:
+                        error_message = f"{field}: {errors[0]}"
+                        break
 
-        # Return validation errors with the new format
-        error_message = "Validation error"
-        # Get the first error message if available
-        if serializer.errors:
-            for field, errors in serializer.errors.items():
-                if errors and isinstance(errors, list) and len(errors) > 0:
-                    error_message = errors[0]
-                    break
-
-        return Response({
-            "message": error_message,
-            "error": "400 Bad Request"
-        }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "message": error_message,
+                "error": "400 Bad Request"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, *args, **kwargs):
         """
@@ -767,13 +850,17 @@ class RecruiterCompanyDetailView(APIView):
             # Get the company details
             company = current_recruiter.company_id
 
-            # Format company image URL if available
+            # Use get_full_url for company image
             company_image_url = None
             if company.company_image:
                 try:
-                    company_image_url = request.build_absolute_uri(company.company_image.url)
-                except:
-                    company_image_url = company.company_image.name if company.company_image else None
+                    if hasattr(company.company_image, 'name'):
+                        company_image_url = get_full_url(company.company_image.name)
+                    else:
+                        company_image_url = get_full_url(str(company.company_image))
+                except Exception as e:
+                    logger.error(f"Error generating URL for company_image: {str(e)}")
+                    company_image_url = None
 
             # Prepare company data
             company_data = {
@@ -802,12 +889,25 @@ class RecruiterCompanyDetailView(APIView):
                 # Count jobs by this recruiter
                 recruiter_job_count = Job.objects.filter(recruiter_id=recruiter).count()
 
+                # Get profile photo URL using get_full_url
+                profile_photo_url = None
+                if user.user_profile_photo:
+                    try:
+                        if hasattr(user.user_profile_photo, 'name'):
+                            profile_photo_url = get_full_url(user.user_profile_photo.name)
+                        else:
+                            profile_photo_url = get_full_url(str(user.user_profile_photo))
+                    except Exception as e:
+                        logger.error(f"Error generating URL for profile_photo: {str(e)}")
+                        profile_photo_url = None
+
                 # Add recruiter info to the list
                 recruiter_data.append({
                     "recruiter_id": recruiter.recruiter_id_id,
                     "user_email": user.user_email,
                     "user_first_name": user.user_first_name,
                     "user_last_name": user.user_last_name,
+                    "profile_photo": profile_photo_url,
                     "is_active": recruiter.recruiter_is_active,
                     "start_date": recruiter.recruiter_start_date.strftime(
                         '%Y-%m-%d') if recruiter.recruiter_start_date else None,

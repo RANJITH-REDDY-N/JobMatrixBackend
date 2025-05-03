@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from JobMatrix.models import User, Applicant, Application, Bookmark, Skill, WorkExperience, Education
 from JobMatrix.auth_backend import JWTAuthentication
 from JobMatrix.permissions import IsAdmin
+from JobMatrix.utils import get_full_url
 
 
 class AdminUserDeleteView(APIView):
@@ -51,7 +52,7 @@ class AdminUserDeleteView(APIView):
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from JobMatrix.models import Company, Recruiter, Job
+from JobMatrix.models import Company, Recruiter, Job, User
 from JobMatrix.auth_backend import JWTAuthentication
 from JobMatrix.permissions import IsAdmin
 
@@ -93,12 +94,20 @@ class AdminCompanyListView(APIView):
                     # Count jobs by this specific recruiter
                     recruiter_job_count = Job.objects.filter(recruiter_id=recruiter).count()
 
+                    # Use get_full_url for profile_photo
+                    profile_photo = None
+                    if user.user_profile_photo:
+                        if hasattr(user.user_profile_photo, 'name'):
+                            profile_photo = get_full_url(user.user_profile_photo.name)
+                        else:
+                            profile_photo = get_full_url(str(user.user_profile_photo))
+
                     active_recruiter_data.append({
                         'recruiter_id': user.user_id,
                         'name': f"{user.user_first_name} {user.user_last_name}",
                         'email': user.user_email,
                         'phone': user.user_phone,
-                        'profile_photo': str(user.user_profile_photo) if user.user_profile_photo else None,
+                        'profile_photo': profile_photo,
                         'start_date': recruiter.recruiter_start_date,
                         'job_count': recruiter_job_count
                     })
@@ -109,17 +118,33 @@ class AdminCompanyListView(APIView):
                     user = recruiter.recruiter_id
                     # Count jobs by this inactive recruiter
                     recruiter_job_count = Job.objects.filter(recruiter_id=recruiter).count()
+                    
+                    # Use get_full_url for profile_photo
+                    profile_photo = None
+                    if user.user_profile_photo:
+                        if hasattr(user.user_profile_photo, 'name'):
+                            profile_photo = get_full_url(user.user_profile_photo.name)
+                        else:
+                            profile_photo = get_full_url(str(user.user_profile_photo))
+                            
                     inactive_recruiter_data.append({
                         'recruiter_id': user.user_id,
                         'name': f"{user.user_first_name} {user.user_last_name}",
                         'email': user.user_email,
                         'phone': user.user_phone,
-                        'profile_photo': str(user.user_profile_photo) if user.user_profile_photo else None,
+                        'profile_photo': profile_photo,
                         'start_date': recruiter.recruiter_start_date,
                         'end_date': recruiter.recruiter_end_date,
                         'job_count': recruiter_job_count
-
                     })
+
+                # Use get_full_url for company_image
+                company_image = None
+                if company.company_image:
+                    if hasattr(company.company_image, 'name'):
+                        company_image = get_full_url(company.company_image.name)
+                    else:
+                        company_image = get_full_url(str(company.company_image))
 
                 # Add company data to response
                 company_data = {
@@ -127,7 +152,7 @@ class AdminCompanyListView(APIView):
                     'company_name': company.company_name,
                     'company_industry': company.company_industry,
                     'company_description': company.company_description,
-                    'company_image': str(company.company_image) if company.company_image else None,
+                    'company_image': company_image,
                     'active_recruiters_count': len(active_recruiters),
                     'inactive_recruiters_count': len(inactive_recruiters),
                     'total_jobs': total_jobs,

@@ -217,6 +217,11 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for updating company details
     """
+    company_name = serializers.CharField(required=False)
+    company_industry = serializers.CharField(required=False)
+    company_description = serializers.CharField(required=False)
+    company_image = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
+    
     class Meta:
         model = Company
         fields = [
@@ -225,6 +230,19 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
             'company_description',
             'company_image',
         ]
+        
+    def validate_company_image(self, value):
+        """
+        Custom validation for company_image field to handle various input types
+        """
+        if value == '' or value is None:
+            return None
+        
+        # If it's a string that's a URL, don't try to handle it as a file
+        if isinstance(value, str) and (value.startswith('http://') or value.startswith('https://')):
+            return value
+            
+        return value
 
 class CompanySecretKeyUpdateSerializer(serializers.ModelSerializer):
     current_company_secret_key = serializers.CharField(write_only=True, required=True)

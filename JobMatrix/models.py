@@ -4,6 +4,8 @@ from django.utils import timezone
 from JobMatrix.storage_backends import MediaStorage
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from os.path import basename
+import re
 
 
 # ================================================
@@ -18,8 +20,9 @@ class User(models.Model):
     ]
 
     def user_profile_photo_upload_to(instance, filename):
-        user_id = instance.user_id if hasattr(instance, 'user_id') and instance.user_id else 'new'
-        return f"profile_photos/{user_id}/{filename}"
+        # Ensure filename doesn't contain path separators
+        clean_filename = basename(filename)
+        return f"profilephotos/{clean_filename}"
 
     user_first_name = models.CharField(max_length=255, db_column='user_first_name')
     user_last_name = models.CharField(max_length=255, db_column='user_last_name')
@@ -69,7 +72,7 @@ class Admin(models.Model):
 class Applicant(models.Model):
 
     def resume_upload_to(instance, filename):
-        return f"resumes/{instance.applicant_id.user_id}/{filename}"
+        return f"resumes/{filename}"
 
     applicant_id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, db_column="applicant_id")
     applicant_resume = models.FileField(storage=MediaStorage(), upload_to=resume_upload_to, blank=True, null=True, db_column="applicant_resume", max_length=255)
@@ -98,8 +101,17 @@ class Recruiter(models.Model):
 class Company(models.Model):
 
     def company_image_upload_to(instance, filename):
-        company_id = instance.company_id if hasattr(instance, 'company_id') and instance.company_id else 'new'
-        return f"company_images/{company_id}/{filename}"
+        # Ensure filename doesn't contain path separators
+        clean_filename = basename(filename)
+        
+        # Replace any potentially problematic characters in the filename
+        clean_filename = re.sub(r'[^a-zA-Z0-9_.-]', '', clean_filename)
+        
+        # Ensure the filename has at least one character
+        if not clean_filename:
+            clean_filename = 'company_image.jpg'
+            
+        return f"companyimages/{clean_filename}"
 
     company_id = models.AutoField(primary_key=True, db_column='company_id')
     company_name = models.CharField(max_length=255, unique=True, db_column='company_name')
@@ -247,14 +259,75 @@ class PasswordResetToken(models.Model):
 # Add at the bottom of the file after all models
 @receiver(post_save, sender=Company)
 def update_company_image_path(sender, instance, created, **kwargs):
-    if created and instance.company_image and 'new' in instance.company_image.name:
-        old_name = instance.company_image.name
-        new_name = f"company_images/{instance.company_id}/{old_name.split('/')[-1]}"
-        Company.objects.filter(pk=instance.pk).update(company_image=new_name)
+    """
+    Signal handler to clean up company image paths after saving.
+    This ensures files are stored in the correct location.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    if instance.company_image:
+        try:
+            old_name = instance.company_image.name
+            
+            # Skip processing if the path is already correctly formatted
+            if old_name.startswith('companyimages/') and '/' in old_name and old_name.count('/') == 1:
+                return
+                
+            # Extract just the filename, not the full path
+            filename = basename(old_name)
+            
+            # Clean the filename of any problematic characters
+            filename = re.sub(r'[^a-zA-Z0-9_.-]', '', filename)
+            
+            # Ensure the filename has at least one character
+            if not filename:
+                filename = 'company_image.jpg'
+                
+            new_name = f"companyimages/{filename}"
+            
+            # Only update if the path has changed
+            if old_name != new_name:
+                logger.info(f"Updating company image path from {old_name} to {new_name}")
+                Company.objects.filter(pk=instance.pk).update(company_image=new_name)
+        except Exception as e:
+            # Log error but don't crash
+            logger.error(f"Error updating company image path: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
 
 @receiver(post_save, sender=User)
 def update_user_photo_path(sender, instance, created, **kwargs):
-    if created and instance.user_profile_photo and 'new' in instance.user_profile_photo.name:
-        old_name = instance.user_profile_photo.name
-        new_name = f"profile_photos/{instance.user_id}/{old_name.split('/')[-1]}"
-        User.objects.filter(pk=instance.pk).update(user_profile_photo=new_name)
+    if instance.user_profile_photo and ('new' in instance.user_profile_photo.name or '/' not in instance.user_profile_photo.name):
+        try:
+            old_name = instance.user_profile_photo.name
+            # Extract just the filename, not the full path
+            filename = basename(old_name)
+            new_name = f"profilephotos/{filename}"
+            
+            # Only update if the path has changed
+            if old_name != new_name:
+                User.objects.filter(pk=instance.pk).update(user_profile_photo=new_name)
+        except Exception as e:
+            # Log error but don't crash
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error updating user photo path: {str(e)}")
+
+@receiver(post_save, sender=Applicant)
+def update_applicant_resume_path(sender, instance, created, **kwargs):
+    if instance.applicant_resume and ('new' in instance.applicant_resume.name or '/' not in instance.applicant_resume.name):
+        try:
+            old_name = instance.applicant_resume.name
+            # Extract just the filename, not the full path
+            filename = basename(old_name)
+            new_name = f"resumes/{filename}"
+            
+            # Only update if the path has changed
+            if old_name != new_name:
+                Applicant.objects.filter(pk=instance.pk).update(applicant_resume=new_name)
+        except Exception as e:
+            # Log error but don't crash
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error updating resume path: {str(e)}")

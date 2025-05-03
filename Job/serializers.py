@@ -260,6 +260,23 @@ class ApplicantDetailSerializer(serializers.ModelSerializer):
 
     def get_email(self, obj):
         return obj.applicant_id.email
+        
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        
+        # Replace applicant_resume with the full URL
+        if representation.get('applicant_resume') and instance.applicant_resume:
+            try:
+                # Use the utility function to get the proper URL
+                if hasattr(instance.applicant_resume, 'name'):
+                    representation['applicant_resume'] = get_full_url(instance.applicant_resume.name)
+                else:
+                    representation['applicant_resume'] = get_full_url(str(instance.applicant_resume))
+            except Exception as e:
+                # Log the error but don't break the application
+                representation['applicant_resume'] = None
+                
+        return representation
 
 class ApplicantSerializerForJob(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
