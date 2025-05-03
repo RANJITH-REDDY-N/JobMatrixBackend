@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "jobmatrixapp.netlify.app", "*.railway.app"]
+ALLOWED_HOSTS = ["*"]
 
 # Update CORS_ALLOWED_ORIGINS with your frontend URLs
 CORS_ALLOWED_ORIGINS = [
