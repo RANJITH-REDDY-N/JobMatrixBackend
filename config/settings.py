@@ -10,12 +10,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'jobmatrix.up.railway.app', 'jobmatrixapp.netlify.app']
 
 # Update CORS_ALLOWED_ORIGINS with your frontend URLs
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "https://jobmatrixapp.netlify.app"
 ]
 # Add CSRF trusted origins
@@ -59,18 +58,6 @@ CSRF_COOKIE_SECURE = True
 
 # ROOT_URLCONF = "JobMatrix.urls"
 ROOT_URLCONF = "config.urls"
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.mysql",
-#         "NAME": config("DB_NAME"),
-#         "USER": config("DB_USER"),
-#         "PASSWORD": config("DB_PASSWORD"),
-#         "HOST": config("DB_HOST"),
-#         "PORT": config("DB_PORT", default="3306"),
-#         "OPTIONS": {"sql_mode": "STRICT_TRANS_TABLES"},
-#     }
-# }
 
 DATABASES = {
     "default": {
