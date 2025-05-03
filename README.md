@@ -3,10 +3,8 @@
 ## 🚀 Getting Started
 
 ## Frontend Repository  
-The client-side code and API logic can be found here:  
-[Frontend Repo](https://github.com/Deepika130599/JobMatrixFrontend)
-
-## Frontend Repository
+The client-side code logic can be found here:  
+[Frontend Repo](https://github.com/RANJITH-REDDY-N/JobMatrixFrontend)
 
 ### Prerequisites
 - Python 3.10+
@@ -19,7 +17,7 @@ The client-side code and API logic can be found here:
 
 
 # Clone the repository
-git clone https://github.com/Deepika130599/JobMatrixBackend
+git clone https://github.com/RANJITH-REDDY-N/JobMatrixBackend
 cd JobMatrixBackend
 
 # Create virtual environment
@@ -35,25 +33,6 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 #To setup the Database
-
-
-# Clone the repository
-git clone https://github.com/Deepika130599/JobMatrixBackend
-cd JobMatrixBackend
-
-# Create virtual environment
-python -m venv venv
-
-# Activate environment
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-#To Run The Application
 python manage.py migrate
 
 #To Run The Application
@@ -83,5 +62,8 @@ JWT_EXPIRATION_DAYS=1
 # Admin secret
 ADMIN_SECRET_KEY=******
 
+#Use SENDGRID Credentials to get verification code.
+SENDGRID_API_KEY=******
+DEFAULT_FROM_EMAIL=example@gmail.com
 
 ```
