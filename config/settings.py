@@ -6,12 +6,11 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "jobmatrixapp.netlify.app", "*.railway.app"]
 
 # Update CORS_ALLOWED_ORIGINS with your frontend URLs
 CORS_ALLOWED_ORIGINS = [
