@@ -4,6 +4,7 @@ from decimal import Decimal
 from JobMatrix.serializers import CompanySerializer  # Import from JobMatrix
 from JobMatrix.models import Recruiter, Company, Bookmark, Application, Job, Applicant
 from config import settings
+from JobMatrix.utils import get_full_url
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -65,12 +66,25 @@ class JobApplicantDetailSerializer(serializers.ModelSerializer):
             'resume': None
         }
 
-        request = self.context.get('request')
+        if applicant.applicant_resume:
+            try:
+                if hasattr(applicant.applicant_resume, 'name'):
+                    applicant_data['resume'] = get_full_url(applicant.applicant_resume.name)
+                else:
+                    applicant_data['resume'] = get_full_url(str(applicant.applicant_resume))
+            except Exception as e:
+                # Handle error but continue
+                pass
 
-        if applicant.applicant_resume and request:
-            applicant_data['resume'] = request.build_absolute_uri(applicant.applicant_resume.url)
-        if user.user_profile_photo and request:
-            applicant_data['profile_photo'] = request.build_absolute_uri(user.user_profile_photo.url)
+        if user.user_profile_photo:
+            try:
+                if hasattr(user.user_profile_photo, 'name'):
+                    applicant_data['profile_photo'] = get_full_url(user.user_profile_photo.name)
+                else:
+                    applicant_data['profile_photo'] = get_full_url(str(user.user_profile_photo))
+            except Exception as e:
+                # Handle error but continue
+                pass
 
         return applicant_data
 
@@ -101,12 +115,17 @@ class BookmarkSerializer(serializers.ModelSerializer):
 
         if job.recruiter_id and job.recruiter_id.company_id:
             company = job.recruiter_id.company_id
-            request = self.context.get('request')
             company_image = None
-            if company.company_image and company.company_image.name and request:
-                company_image = request.build_absolute_uri(
-                    settings.MEDIA_URL + str(company.company_image)
-                )
+            
+            if company.company_image:
+                try:
+                    if hasattr(company.company_image, 'name'):
+                        company_image = get_full_url(company.company_image.name)
+                    else:
+                        company_image = get_full_url(str(company.company_image))
+                except Exception:
+                    # Handle error but continue
+                    pass
 
             response_data['company'] = {
                 'company_id': company.company_id,
@@ -198,24 +217,25 @@ class UserAppliedJobsSerializer(serializers.ModelSerializer):
         job = obj.job_id
         if not job or not job.recruiter_id or not hasattr(job.recruiter_id, 'company_id'):
             return {
-                "company_name": "Not available",
+                "company_id": None,
+                "company_name": "Unknown Company",
                 "company_industry": "",
-                "company_description": ""
+                "company_description": "",
+                "company_image": None
             }
 
         company = job.recruiter_id.company_id
-        request = self.context.get('request')
-
-        # Prepare company image URL as absolute URI
         company_image = None
+        
         if company.company_image:
-            if request:
-                company_image = request.build_absolute_uri(
-                    settings.MEDIA_URL + str(company.company_image)
-                )
-            else:
-                # Fallback if request is not available in context
-                company_image = settings.MEDIA_URL + str(company.company_image)
+            try:
+                if hasattr(company.company_image, 'name'):
+                    company_image = get_full_url(company.company_image.name)
+                else:
+                    company_image = get_full_url(str(company.company_image))
+            except Exception:
+                # Handle error but continue
+                pass
 
         return {
             "company_id": company.company_id,

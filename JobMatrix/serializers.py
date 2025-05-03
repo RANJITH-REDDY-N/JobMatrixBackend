@@ -8,6 +8,7 @@ from Profile.serializers import (
     EducationSerializer,
 )
 import logging
+from .utils import get_full_url
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +28,6 @@ class UserSerializerForResponse(serializers.ModelSerializer):
         fields = ["user_id", "user_first_name", "user_last_name", "user_email", "user_phone", "user_street_no",
                   "user_city", "user_state", "user_zip_code", "user_role", "user_profile_photo", "user_created_date"]
 
-    def get_profile_image_url(self, obj):
-        if hasattr(obj, 'user_profile_photo') and obj.user_profile_photo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(settings.MEDIA_URL + str(obj.user_profile_photo))
-        return None
-
     def create(self, validated_data):
         validated_data['user_password'] = make_password(validated_data['user_password'])
         return super().create(validated_data)
@@ -44,21 +38,16 @@ class UserSerializerForResponse(serializers.ModelSerializer):
         
         # Replace user_profile_photo with the full URL
         if representation.get('user_profile_photo') and instance.user_profile_photo:
-            request = self.context.get('request')
-            if request:
-                try:
-                    if hasattr(instance.user_profile_photo, 'url'):
-                        representation['user_profile_photo'] = request.build_absolute_uri(
-                            instance.user_profile_photo.url
-                        )
-                    else:
-                        representation['user_profile_photo'] = request.build_absolute_uri(
-                            settings.MEDIA_URL + str(instance.user_profile_photo)
-                        )
-                except Exception as e:
-                    # Log the error but don't break the application
-                    logger.error(f"Error generating URL for user_profile_photo: {str(e)}")
-                    # Keep the original value unchanged
+            try:
+                # Use the utility function to get the proper URL
+                if hasattr(instance.user_profile_photo, 'name'):
+                    representation['user_profile_photo'] = get_full_url(instance.user_profile_photo.name)
+                else:
+                    representation['user_profile_photo'] = get_full_url(str(instance.user_profile_photo))
+            except Exception as e:
+                # Log the error but don't break the application
+                logger.error(f"Error generating URL for user_profile_photo: {str(e)}")
+                # Keep the original value unchanged
         
         return representation
 
@@ -81,22 +70,17 @@ class ApplicantSerializer(serializers.ModelSerializer):
 
         # Replace applicant_resume with the full URL
         if representation.get('applicant_resume') and instance.applicant_resume:
-            request = self.context.get('request')
-            if request:
-                try:
-                    if hasattr(instance.applicant_resume, 'url'):
-                        representation['applicant_resume'] = request.build_absolute_uri(
-                            instance.applicant_resume.url
-                        )
-                    else:
-                        representation['applicant_resume'] = request.build_absolute_uri(
-                            settings.MEDIA_URL + str(instance.applicant_resume)
-                        )
-                except Exception as e:
-                    # Log the error but don't break the application
-                    logger.error(f"Error generating URL for applicant_resume: {str(e)}")
-                    # Keep the original value or set to None to avoid frontend errors
-                    representation['applicant_resume'] = None
+            try:
+                # Use the utility function to get the proper URL
+                if hasattr(instance.applicant_resume, 'name'):
+                    representation['applicant_resume'] = get_full_url(instance.applicant_resume.name)
+                else:
+                    representation['applicant_resume'] = get_full_url(str(instance.applicant_resume))
+            except Exception as e:
+                # Log the error but don't break the application
+                logger.error(f"Error generating URL for applicant_resume: {str(e)}")
+                # Keep the original value or set to None to avoid frontend errors
+                representation['applicant_resume'] = None
 
         return representation
 
@@ -142,6 +126,26 @@ class CompanySerializer(serializers.ModelSerializer):
         validated_data['company_secret_key'] = make_password(validated_data['company_secret_key'])
         return super().create(validated_data)
 
+    def to_representation(self, instance):
+        # Get the default representation
+        representation = super().to_representation(instance)
+
+        # Replace company_image with the full URL
+        if representation.get('company_image') and instance.company_image:
+            try:
+                # Use the utility function to get the proper URL
+                if hasattr(instance.company_image, 'name'):
+                    representation['company_image'] = get_full_url(instance.company_image.name)
+                else:
+                    representation['company_image'] = get_full_url(str(instance.company_image))
+            except Exception as e:
+                # Log the error but don't break the application
+                logger.error(f"Error generating URL for company_image: {str(e)}")
+                # Keep the original value or set to None to avoid frontend errors
+                representation['company_image'] = None
+
+        return representation
+
 class CompanySerializerForResponse(serializers.ModelSerializer):
     class Meta:
         model = Company
@@ -155,23 +159,18 @@ class CompanySerializerForResponse(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         # Replace company_image with the full URL
-        if instance.company_image:
-            request = self.context.get('request')
-            if request:
-                try:
-                    if hasattr(instance.company_image, 'url'):
-                        representation['company_image'] = request.build_absolute_uri(
-                            instance.company_image.url
-                        )
-                    else:
-                        representation['company_image'] = request.build_absolute_uri(
-                            settings.MEDIA_URL + str(instance.company_image)
-                        )
-                except Exception as e:
-                    # Log the error but don't break the application
-                    logger.error(f"Error generating URL for company_image: {str(e)}")
-                    # Keep the original value or set to None to avoid frontend errors
-                    representation['company_image'] = None
+        if representation.get('company_image') and instance.company_image:
+            try:
+                # Use the utility function to get the proper URL
+                if hasattr(instance.company_image, 'name'):
+                    representation['company_image'] = get_full_url(instance.company_image.name)
+                else:
+                    representation['company_image'] = get_full_url(str(instance.company_image))
+            except Exception as e:
+                # Log the error but don't break the application
+                logger.error(f"Error generating URL for company_image: {str(e)}")
+                # Keep the original value or set to None to avoid frontend errors
+                representation['company_image'] = None
 
         return representation
 
@@ -295,16 +294,15 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         if obj.user_role == 'APPLICANT':
             applicant = Applicant.objects.filter(applicant_id=obj.user_id).first()
             if applicant and applicant.applicant_resume:
-                request = self.context.get('request')
-                if request:
-                    try:
-                        if hasattr(applicant.applicant_resume, 'url'):
-                            return request.build_absolute_uri(applicant.applicant_resume.url)
-                        return request.build_absolute_uri(settings.MEDIA_URL + str(applicant.applicant_resume))
-                    except Exception as e:
-                        # Log the error but don't break the application
-                        logger.error(f"Error generating URL for applicant_resume in AdminUserListSerializer: {str(e)}")
-                        return None
+                try:
+                    # Use the utility function to get the proper URL
+                    if hasattr(applicant.applicant_resume, 'name'):
+                        return get_full_url(applicant.applicant_resume.name)
+                    return get_full_url(str(applicant.applicant_resume))
+                except Exception as e:
+                    # Log the error but don't break the application
+                    logger.error(f"Error generating URL for applicant_resume in AdminUserListSerializer: {str(e)}")
+                    return None
         return None
 
     def get_recruiter(self, obj):
@@ -318,8 +316,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         if obj.user_role == 'RECRUITER':
             recruiter = Recruiter.objects.filter(recruiter_id=obj.user_id).first()
             if recruiter and recruiter.company_id:
-                request = self.context.get('request')
-                return CompanySerializerForResponse(recruiter.company_id, context={'request': request}).data
+                return CompanySerializerForResponse(recruiter.company_id).data
         return None
 
     def get_admin_ssn(self, obj):
