@@ -193,19 +193,18 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'nalla4r@cmich.edu')
 # AWS S3 Settings
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
-AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default=None)
-AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-2')  # Default to us-east-2
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='jobmatrixmediabucket')
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-2')
 
 # Verify if S3 credentials are valid
-USE_S3_STORAGE = False  # Start with False, will set to True if validation passes
+USE_S3_STORAGE = False
 S3_CREDENTIALS_PRESENT = all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME])
 
 if S3_CREDENTIALS_PRESENT:
     try:
         import boto3
         from botocore.exceptions import ClientError, NoCredentialsError
-        
-        # Try to validate S3 credentials by making a simple API call
+
         try:
             s3 = boto3.client(
                 's3',
@@ -213,20 +212,16 @@ if S3_CREDENTIALS_PRESENT:
                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
                 region_name=AWS_S3_REGION_NAME
             )
-            
-            # Try to list the buckets - this will fail if credentials are invalid
+
             s3.list_buckets()
-            
-            # If we got here, credentials are valid
+
             USE_S3_STORAGE = True
             
         except (ClientError, NoCredentialsError):
-            # Silently fall back to local storage
             pass
     except ImportError:
         pass
 else:
-    # Silently use local file storage
     USE_S3_STORAGE = False
 
 if USE_S3_STORAGE:
