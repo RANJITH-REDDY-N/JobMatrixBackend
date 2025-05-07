@@ -194,8 +194,8 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'nalla4r@cmich.edu')
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
 # Manually set the variable as a test
-os.environ['AWS_STORAGE_BUCKET_NAME'] = 'test-bucket'
-AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+# os.environ['AWS_STORAGE_BUCKET_NAME'] = 'test-bucket'
+AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
 print(f"After manual set: {AWS_STORAGE_BUCKET_NAME}")
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default=None)
 
