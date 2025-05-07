@@ -193,8 +193,10 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'nalla4r@cmich.edu')
 # AWS S3 Settings
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
-AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
+print("before os ",os.environ.get('AWS_STORAGE_BUCKET_NAME'))  # Should show None if not set
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default=None)
+print(f"AWS bucket name: {AWS_STORAGE_BUCKET_NAME}")  # Debug output
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default=None)
 
 # Verify if S3 credentials are valid
 USE_S3_STORAGE = False
