@@ -1,6 +1,130 @@
-# JobMatrix Backend (Django)
+# JobMatrix Backend
 
-## 🚀 Getting Started
+A robust Django-based backend service for the JobMatrix application, providing job management and user profile functionality.
+
+## Features
+
+- User Authentication with JWT
+- Profile Management
+- Job Management
+- Email Integration (SendGrid)
+- AWS Integration
+- RESTful API Architecture
+- CORS Support
+- Database: MySQL
+
+## Prerequisites
+
+- Python 3.8+
+- MySQL
+- Docker (optional)
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd JobMatrixBackend
+```
+
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Set up environment variables:
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Django Settings
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database Settings (AWS RDS)
+DB_NAME=jobmatrix
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_HOST=localhost
+DB_PORT=3306
+
+# JWT Settings
+JWT_SECRET_KEY=your-jwt-secret-key
+JWT_ACCESS_TOKEN_LIFETIME=5
+JWT_REFRESH_TOKEN_LIFETIME=1
+
+# Email Settings (SendGrid)
+SENDGRID_API_KEY=your-sendgrid-api-key
+EMAIL_FROM=your-verified-sender@example.com
+
+# AWS Settings (S3 Bucket)
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_STORAGE_BUCKET_NAME=your-bucket-name
+AWS_S3_REGION_NAME=your-region
+```
+
+5. Run migrations:
+```bash
+python manage.py migrate
+```
+
+6. Start the development server:
+```bash
+python manage.py runserver
+```
+
+## Docker Setup
+
+1. Build the Docker image:
+```bash
+docker build -t jobmatrix-backend .
+```
+
+2. Run with Docker Compose:
+```bash
+docker-compose up
+```
+
+## API Documentation
+
+The API documentation is available at `/api/docs/` when running the server.
+
+## Project Structure
+
+```
+JobMatrixBackend/
+├── Job/                 # Job management app
+├── Profile/            # User profile management app
+├── JobMatrix/          # Main project settings
+├── config/             # Configuration files
+├── manage.py           # Django management script
+├── requirements.txt    # Project dependencies
+├── dockerfile         # Docker configuration
+└── docker-compose.yml # Docker Compose configuration
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, email support@jobmatrix.com or create an issue in the repository.
 
 ## Frontend Repository  
 The client-side code logic can be found here:  
