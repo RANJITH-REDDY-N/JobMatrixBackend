@@ -6,7 +6,6 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-print("ALL ENV VARS:", dict(os.environ))
 
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)
