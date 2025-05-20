@@ -44,7 +44,6 @@ Create a `.env` file in the root directory with the following variables:
 ```env
 # Django Settings
 DEBUG=True
-SECRET_KEY=your-secret-key-here
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 # Database Settings (AWS RDS)
@@ -166,8 +165,6 @@ python manage.py runserver
 ## .env (should look some thing like this)
 
 ```bash
-
-SECRET_KEY= ******
 DEBUG=True
 
 # Database Configuration
