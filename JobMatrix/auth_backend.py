@@ -11,7 +11,7 @@ class JWTAuthentication(BaseAuthentication):
         if not auth_header or not auth_header.startswith("Bearer "):
             return None
 
-        token = auth_header.split(" ")[1]
+        token = auth_header.split(" ")[1] # Extract the token from the header
         try:
             payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
         except jwt.ExpiredSignatureError:
