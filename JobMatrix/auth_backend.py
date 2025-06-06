@@ -13,7 +13,7 @@ class JWTAuthentication(BaseAuthentication):
 
         token = auth_header.split(" ")[1] # Extract the token from the header
         try:
-            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]) # Decode the token
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed("Token has expired")
         except jwt.InvalidTokenError:
