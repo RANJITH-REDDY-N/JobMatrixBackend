@@ -32,7 +32,7 @@ class JWTAuthentication(BaseAuthentication):
         Generates a JWT token for the user.
         """
         now_utc = datetime.now(timezone.utc)
-        expiration_days = int(settings.JWT_EXPIRATION_DAYS)
+        expiration_days = int(settings.JWT_EXPIRATION_DAYS) # Get the expiration days from the settings
         payload = {
             "user_id": user.user_id,
             "exp": now_utc + timedelta(days=expiration_days),
