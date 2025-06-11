@@ -36,7 +36,7 @@ class JWTAuthentication(BaseAuthentication):
         payload = {
             "user_id": user.user_id,    # user_id is the primary key of the user model
             "exp": now_utc + timedelta(days=expiration_days), # expiration date of the token
-            "iat": now_utc,
+            "iat": now_utc, # issued at date of the token
         }
         token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
         return token
