@@ -34,8 +34,8 @@ class JWTAuthentication(BaseAuthentication):
         now_utc = datetime.now(timezone.utc)
         expiration_days = int(settings.JWT_EXPIRATION_DAYS) # Get the expiration days from the settings
         payload = {
-            "user_id": user.user_id,
-            "exp": now_utc + timedelta(days=expiration_days),
+            "user_id": user.user_id,    # user_id is the primary key of the user model
+            "exp": now_utc + timedelta(days=expiration_days), # expiration date of the token
             "iat": now_utc,
         }
         token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
