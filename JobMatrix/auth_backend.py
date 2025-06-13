@@ -20,23 +20,23 @@ class JWTAuthentication(BaseAuthentication):
             raise AuthenticationFailed("Invalid token")
 
         try:
-            user = User.objects.get(user_id=payload["user_id"])
+            user = User.objects.get(user_id=payload["user_id"]) # Get the user from the database
         except User.DoesNotExist:
-            raise AuthenticationFailed("User not found")
+            raise AuthenticationFailed("User not found") # Raise an authentication failed exception if the user is not found
 
         return user, None
 
     @staticmethod
-    def generate_jwt(user):
+    def generate_jwt(user): # Generate a JWT token for the user
         """
         Generates a JWT token for the user.
         """
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(timezone.utc) # Get the current time in UTC
         expiration_days = int(settings.JWT_EXPIRATION_DAYS) # Get the expiration days from the settings
         payload = {
-            "user_id": user.user_id,    
-            "exp": now_utc + timedelta(days=expiration_days), 
-            "iat": now_utc, 
+            "user_id": user.user_id,    # User ID
+            "exp": now_utc + timedelta(days=expiration_days), # Expiration time
+            "iat": now_utc,     # Issued at time
         }
         token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
         return token
