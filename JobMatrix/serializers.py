@@ -10,31 +10,31 @@ from Profile.serializers import (
 import logging
 from .utils import get_full_url
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) 
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer): 
     class Meta:
         model = User
         fields = '__all__'
 
-    def create(self, validated_data):
-        validated_data['user_password'] = make_password(validated_data['user_password'])
-        return super().create(validated_data)
+    def create(self, validated_data): 
+        validated_data['user_password'] = make_password(validated_data['user_password']) # Hash the password
+        return super().create(validated_data) # Create the user
 
 class UserSerializerForResponse(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = User # User model
         fields = ["user_id", "user_first_name", "user_last_name", "user_email", "user_phone", "user_street_no",
                   "user_city", "user_state", "user_zip_code", "user_role", "user_profile_photo", "user_created_date"]
 
-    def create(self, validated_data):
-        validated_data['user_password'] = make_password(validated_data['user_password'])
-        return super().create(validated_data)
+    def create(self, validated_data): 
+        validated_data['user_password'] = make_password(validated_data['user_password']) # Hash the password
+        return super().create(validated_data) # Create the user
 
-    def to_representation(self, instance):
+    def to_representation(self, instance): # Convert the user object to a dictionary
         # Get the default representation
-        representation = super().to_representation(instance)
+        representation = super().to_representation(instance) # Get the default representation
         
         # Replace user_profile_photo with the full URL
         if representation.get('user_profile_photo') and instance.user_profile_photo:
