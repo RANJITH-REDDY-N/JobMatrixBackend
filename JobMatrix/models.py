@@ -14,13 +14,13 @@ import re
 class User(models.Model):
     user_id = models.AutoField(primary_key=True, db_column='user_id')
     ROLE_CHOICES = [
-        ("ADMIN", "ADMIN"),
+        ("ADMIN", "ADMIN"), 
         ("APPLICANT", "APPLICANT"),
         ("RECRUITER", "RECRUITER"),
     ]
 
-    def user_profile_photo_upload_to(instance, filename):
-        # Ensure filename doesn't contain path separators
+    def user_profile_photo_upload_to(instance, filename): 
+        # Ensure filename doesn't contain path separators, and is not empty 
         clean_filename = basename(filename)
         return f"profilephotos/{clean_filename}"
 
@@ -71,8 +71,8 @@ class Admin(models.Model):
 # ================================================
 class Applicant(models.Model):
 
-    def resume_upload_to(instance, filename):
-        return f"resumes/{filename}"
+    def resume_upload_to(instance, filename): 
+        return f"resumes/{filename}" 
 
     applicant_id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, db_column="applicant_id")
     applicant_resume = models.FileField(storage=MediaStorage(), upload_to=resume_upload_to, blank=True, null=True, db_column="applicant_resume", max_length=255)
@@ -111,10 +111,10 @@ class Company(models.Model):
         if not clean_filename:
             clean_filename = 'company_image.jpg'
             
-        return f"companyimages/{clean_filename}"
+        return f"companyimages/{clean_filename}" 
 
-    company_id = models.AutoField(primary_key=True, db_column='company_id')
-    company_name = models.CharField(max_length=255, unique=True, db_column='company_name')
+    company_id = models.AutoField(primary_key=True, db_column='company_id') 
+    company_name = models.CharField(max_length=255, unique=True, db_column='company_name') 
     company_industry = models.CharField(max_length=100, blank=False, null=False, db_column='company_industry')
     company_description = models.TextField(db_column='company_description')
     company_image = models.FileField(storage=MediaStorage(), upload_to=company_image_upload_to, blank=True, null=True, db_column="company_image", max_length=255)
