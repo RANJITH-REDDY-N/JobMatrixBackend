@@ -23,12 +23,12 @@ if settings.USE_S3_STORAGE:
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             # Verify S3 credentials and bucket access
-            try:
-                s3 = boto3.client(
-                    's3',
-                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                    region_name=settings.AWS_S3_REGION_NAME
+            try: # Try to access the bucket
+                s3 = boto3.client( # Create a client
+                    's3', # Use the S3 service
+                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID, # Access key ID
+                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, # Secret access key
+                    region_name=settings.AWS_S3_REGION_NAME # Region name
                 )
                 s3.head_bucket(Bucket=settings.AWS_STORAGE_BUCKET_NAME)
                 # Success, but don't log it
