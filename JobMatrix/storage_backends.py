@@ -20,7 +20,7 @@ if settings.USE_S3_STORAGE:
         querystring_auth = True  # Explicitly enable querystring auth
         querystring_expire = settings.AWS_QUERYSTRING_EXPIRE
         
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs): # Initialize the storage class
             super().__init__(*args, **kwargs)
             # Verify S3 credentials and bucket access
             try: # Try to access the bucket
