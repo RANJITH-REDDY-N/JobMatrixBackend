@@ -297,23 +297,7 @@ def update_company_image_path(sender, instance, created, **kwargs):
             logger.error(traceback.format_exc())
 
 
-@receiver(post_save, sender=Applicant)
-def update_applicant_resume_path(sender, instance, created, **kwargs):
-    if instance.applicant_resume and ('new' in instance.applicant_resume.name or '/' not in instance.applicant_resume.name):
-        try:
-            old_name = instance.applicant_resume.name
-            # Extract just the filename, not the full path
-            filename = basename(old_name)
-            new_name = f"resumes/{filename}"
-            
-            # Only update if the path has changed
-            if old_name != new_name:
-                Applicant.objects.filter(pk=instance.pk).update(applicant_resume=new_name)
-        except Exception as e:
-            # Log error but don't crash
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error updating resume path: {str(e)}")
+
 
 
 @receiver(post_save, sender=User)
@@ -333,3 +317,22 @@ def update_user_photo_path(sender, instance, created, **kwargs):
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Error updating user photo path: {str(e)}")
+
+
+@receiver(post_save, sender=Applicant)
+def update_applicant_resume_path(sender, instance, created, **kwargs):
+    if instance.applicant_resume and ('new' in instance.applicant_resume.name or '/' not in instance.applicant_resume.name):
+        try:
+            old_name = instance.applicant_resume.name
+            # Extract just the filename, not the full path
+            filename = basename(old_name)
+            new_name = f"resumes/{filename}"
+            
+            # Only update if the path has changed
+            if old_name != new_name:
+                Applicant.objects.filter(pk=instance.pk).update(applicant_resume=new_name)
+        except Exception as e:
+            # Log error but don't crash
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error updating resume path: {str(e)}")
