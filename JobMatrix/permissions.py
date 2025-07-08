@@ -4,8 +4,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.user_role == 'ADMIN'
@@ -13,9 +11,6 @@ class IsAdmin(BasePermission):
 class IsRecruiter(BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.user_role == 'RECRUITER'
-
-
-
 
 class IsSelfOrAdmin(BasePermission):
     def has_object_permission(self, request, view, obj):
