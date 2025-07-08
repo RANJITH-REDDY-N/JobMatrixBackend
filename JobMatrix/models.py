@@ -234,7 +234,7 @@ class Skill(models.Model):
     skill_years_of_experience = models.PositiveIntegerField(default=0, null=False, blank=False, db_column='skill_years_of_experience')
 
     class Meta:
-        db_table = "SKILL"
+        db_table = "SKILL" 
         constraints = [
             models.CheckConstraint(check=models.Q(skill_years_of_experience__gte=0), name="check_skill_experience")
         ]
@@ -255,6 +255,9 @@ class PasswordResetToken(models.Model):
     @property
     def is_expired(self):
         return timezone.now() > self.expires_at
+
+
+
 
 # Add at the bottom of the file after all models
 @receiver(post_save, sender=Company)
@@ -295,9 +298,6 @@ def update_company_image_path(sender, instance, created, **kwargs):
             logger.error(f"Error updating company image path: {str(e)}")
             import traceback
             logger.error(traceback.format_exc())
-
-
-
 
 
 @receiver(post_save, sender=User)

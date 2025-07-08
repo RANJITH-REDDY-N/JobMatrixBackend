@@ -14,6 +14,13 @@ class IsRecruiter(BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.user_role == 'RECRUITER'
 
+
+
+
+class IsSelfOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user.user_role == 'ADMIN' or obj.user_id == request.user.user_id
+
 class IsApplicant(BasePermission): 
     def has_permission(self, request, view): 
         return bool(    
@@ -21,11 +28,6 @@ class IsApplicant(BasePermission):
             request.user.is_authenticated and # User is authenticated
             hasattr(request.user, 'applicant') # User has an applicant object
         )
-
-
-class IsSelfOrAdmin(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return request.user.user_role == 'ADMIN' or obj.user_id == request.user.user_id
 
 class IsSelf(BasePermission):
     def has_permission(self, request, view):
